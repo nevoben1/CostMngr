@@ -2,16 +2,18 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const UsersSchema = new Schema({
-    user_id: {
+    id: {
         type: Number,
         unique: true,
         required: true
     },
     first_name: {
-        type: String
+        type: String,
+        required: true
     },
     last_name: {
-        type: String
+        type: String,
+        required: true
     },
     birthday: {
         type: Date

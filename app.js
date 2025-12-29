@@ -1,6 +1,5 @@
 var createError = require('http-errors');
 var express = require('express');
-var User = require('../models/users');
 const mongoose = require('mongoose');
 require('dotenv').config();
 mongoose.Promise = global.Promise;
@@ -15,7 +14,7 @@ var apiRouter = require('./routes/api');
 var app = express();
 
 mongoose.connect(process.env.MONGODB_URI , {autoIndex:true})
-    .then(() => {console.log('MongoDB connected successfully')})
+    .then(() => {console.log('MongoDB connected successfully !!!!!')})
     .catch(err => console.error('MongoDB connection error:', err));
 
 
