@@ -1,13 +1,10 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const router = express.Router();
 const Product = require('../models/products');
-const Cost = require('../models/costs');
-const Log = require('../models/logs');
 const url = require('url');
 
 
-const { createCost, createLog , createUser , getAllUsers , getUserById , getMonthlyReport } = require('../services/documentService');
+const { createCost, createLog , createUser , getAllUsers , getUserById , getMonthlyReport} = require('../services/documentService');
 
 router.get('/products',function(req,res,next){
     Product.find({}).then(function(prdcts){
@@ -22,13 +19,39 @@ router.get('/about',function(req,res,next){
 
 router.get('/report' , async function(req,res,next){
     try{
+        //get query params
         const parsedUrl = url.parse(req.url, true);
         const query = parsedUrl.query;
+        //set them in variables
         const userId = parsedUrl.query.id;
         const year = parsedUrl.query.year;
         const month = parsedUrl.query.month;
+        const monthAsInt = parseInt(month);
+        if(monthAsInt < 1 || monthAsInt > 12){
+            return res.status(400).send({"invalid month param":parsedUrl.query.month});
+        }
+        //query the DB by the params
         const costs = await getMonthlyReport(userId , year , month);
-        res.send(costs);
+        //init the hashmap of categories to costs and fill it
+        const categoriesToCosts = new Map();
+        for(const cost of costs){
+            console.log(cost);
+            const category = cost.category;
+            const day = new Date(cost.date).getDate();
+            const objToAdd = {sum:cost.sum, description:cost.description , day:day };
+            //console.log("objToAdd : " , objToAdd);
+            if(categoriesToCosts.has(category)){
+
+                categoriesToCosts.get(category).push(objToAdd);
+            }
+            else{
+                categoriesToCosts.set(category, [objToAdd]);
+            }
+        }
+        const costsArray = Array.from(categoriesToCosts , ([category,items]) =>({[category] : items}));
+
+        const retVal = {userId: parseInt(userId), year:parseInt(year), month: parseInt(month), costs: costsArray };
+        res.send(retVal);
 
         createLog({
             message: 'get_costs_invoked',
