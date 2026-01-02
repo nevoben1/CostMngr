@@ -3,16 +3,21 @@ const Schema = mongoose.Schema;
 
 const UsersSchema = new Schema({
     id: {
-        type: Number
+        type: Number,
+        unique: true,
+        required: true
     },
     first_name: {
-        type: String
+        type: String,
+        required: true
     },
     last_name: {
-        type: String
+        type: String,
+        required: true
     },
     birthday: {
-        type: Date
+        type: Date,
+        required:true
     }
 });
 

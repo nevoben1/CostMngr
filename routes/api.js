@@ -1,70 +1,131 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const router = express.Router();
 const Product = require('../models/products');
-const Cost = require('../models/costs');
-const Log = require('../models/logs');
+const url = require('url');
+const {logger , createInfoLog , createLogByType} = require('../Services/loggerServices');
+const logLevel = require('../Services/logLevel');
 
-const { createCost, createLog , createUser , getAllUsers , getUserById } = require('../services/documentService');
+const { createCost, createLog , createUser , getAllUsers , getUserById , getMonthlyReport} = require('../services/documentService');
 
-router.get('/products',function(req,res,next){
-    Product.find({}).then(function(prdcts){
-        res.send(prdcts);
-    }).catch(next);
+router.get('/about',function(req,res,next){
+    //TBD - add log to DB
+    createLogByType('GET /about called',logLevel.INFO , true)
+    //createInfoLog('GET /about called',logLevel.INFO);
+    //logger.info('GET /about called');
+    const members = process.env.TEAM_MEMBERS.split(',').map(mem => mem.trim());
+    createLogByType('members ' + members,logLevel.INFO , true)
+    //createInfoLog('members ' + members , logLevel.INFO , true);
+    res.send(members);
+
 });
-router.get('/users' , async function(req,res,next){
-    try{
-        const users = await getAllUsers();
-        res.send(users);
 
-        createLog({
-            message: 'get_users_invoked',
-            date: new Date(),
-            type: 'INFO'
-        }).catch(err => console.log(err));
+router.get('/report' , async function(req,res,next){
+    try{
+        createLogByType('GET /report called' , logLevel.INFO);
+        //logger.info('GET /report called');
+        //get query params
+        const parsedUrl = url.parse(req.url, true);
+        const query = parsedUrl.query;
+        //set them in variables
+        const userId = parsedUrl.query.id;
+        const year = parsedUrl.query.year;
+        const month = parsedUrl.query.month;
+        const monthAsInt = parseInt(month);
+        if(monthAsInt < 1 || monthAsInt > 12){
+            createLogByType('invalid month parameter passed , aborting' , logLevel.ERROR , true);
+            //logger.error('invalid month parameter passed , aborting');
+            return res.status(400).send({"invalid month param":parsedUrl.query.month});
+        }
+        //query the DB by the params
+        const costs = await getMonthlyReport(userId , year , month);
+        //init the hashmap of categories to costs and fill it
+        const categoriesToCosts = new Map();
+        for(const cost of costs){
+            createLogByType(cost , logLevel.INFO);
+            //console.log(cost);
+            const category = cost.category;
+            const day = new Date(cost.date).getDate();
+            const objToAdd = {sum:cost.sum, description:cost.description , day:day };
+            //console.log("objToAdd : " , objToAdd);
+            if(categoriesToCosts.has(category)){
+
+                categoriesToCosts.get(category).push(objToAdd);
+            }
+            else{
+                categoriesToCosts.set(category, [objToAdd]);
+            }
+        }
+        const costsArray = Array.from(categoriesToCosts , ([category,items]) =>({[category] : items}));
+
+        const retVal = {userId: parseInt(userId), year:parseInt(year), month: parseInt(month), costs: costsArray };
+        res.send(retVal);
+        createLogByType('created a report for userId: ' + userId +' year: ' + year +'month: ' + month , logLevel.INFO , true);
+        //createInfoLog('created a report for userId: ' + userId +' year: ' + year +'month: ' + month);
+
     }
     catch(err){
-        console.error('Error getting all users:', err);
+        createLogByType('Error getting all users: ' + err , logLevel.ERROR , true);
+        //console.error('Error getting all users:', err);
+        next(err);
+    }
+});
+
+
+
+router.get('/users' , async function(req,res,next){
+    try{
+        createInfoLog('GET /users called' , logLevel.INFO , true);
+        //logger.info('GET /users called');
+        const users = await getAllUsers();
+        res.send(users);
+        createLogByType('found all users' , logLevel.INFO , true);
+        //createInfoLog('found all users');
+
+    }
+    catch(err){
+        createLogByType('Error getting all users: ' + err , logLevel.ERROR , true);
+        //console.error('Error getting all users:', err);
         next(err);
     }
 });
 
 router.get('/users/:userId' , async function(req,res,next){
     try{
+        createLogByType('GET /users with userId ' + req.params.userId + ' called' , logLevel.INFO , true);
+        //logger.info('GET /users with userId ' + req.params.userId + ' called');
         const userId = req.params.userId;
         const user = await getUserById(userId);
         res.send(user);
-
-        createLog({
-            message: 'get_user for userId : ' + userId,
-            date: new Date(),
-            type: 'INFO'
-        }).catch(err => console.log(err));
+        createLogByType('found user: ' +  JSON.stringify(user), logLevel.INFO , true);
+        //createInfoLog('found user: ' + JSON.stringify(user));
     }
     catch(err){
-        console.error('Error getting all users:', err);
+        createLogByType('Error getting all users: ' + err , logLevel.ERROR , true);
+        //console.error('Error getting all users:', err);
         next(err);
     }
 });
 
 router.post('/add' , async function(req,res,next){
     try {
-        console.log('Received data:', req.body);
+        createLogByType('POST /add called' , logLevel.INFO , true);
+        //logger.info('POST /add called');
+        createLogByType('Received data: '+ JSON.stringify(req.body) , logLevel.INFO);
+        //logger.info('Received data: '+ JSON.stringify(req.body));
 
+        const categories = process.env.SUPPORTED_CATEGORIES.split(',').map(cat => cat.trim());
+        if(!categories.includes(req.body.category))
+        {
+          createLogByType("invalid category: "+ req.body.category , logLevel.ERROR , true);
+          return res.status(400).send({"invalid category":req.body.category});
+        }
         const cost = await createCost(req.body);
-
-        //console.log('Collection name:', Cost.collection.name);
-        //console.log('DB name:', mongoose.connection.name);
-        //console.log('Created cost:', cost);
         res.send(cost);
-
-        createLog({
-            message: 'cost_created',
-            date: new Date(),
-            type: 'INFO'
-        }).catch(err => console.log(err));
+        createLogByType('cost_created' , logLevel.INFO , true);
+        //createInfoLog('cost_created');
     } catch(error) {
-        console.error('Error creating cost:', error);
+        createLogByType('Error creating cost: ' + error , logLevel.ERROR , true);
+        //console.error('Error creating cost:', error);
         next(error);
     }
 });
@@ -72,18 +133,18 @@ router.post('/add' , async function(req,res,next){
 
 router.post('/adduser' , async function(req,res,next){
     try {
-        console.log('Received data:', req.body);
+        createLogByType('POST /add called' , logLevel.INFO , true);
+        //logger.info('POST /add called');
+        createLogByType('Received data: '+ JSON.stringify(req.body) , logLevel.INFO);
+        //logger.info('Received data: '+ req.body);
 
         const user = await createUser(req.body);
         res.send(user);
-
-        createLog({
-            message: 'user_created',
-            date: new Date(),
-            type: 'INFO'
-        }).catch(err => console.log(err));
+        createLogByType('created user: ' + JSON.stringify(user) , logLevel.INFO , true);
+        //createInfoLog('created user: ' + JSON.stringify(user));
     } catch(error) {
-        console.error('Error creating user:', error);
+        createLogByType('Error creating user: ' + error , logLevel.ERROR , true);
+        //console.error('Error creating user:', error);
         next(error);
     }
 });

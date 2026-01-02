@@ -2,10 +2,10 @@ var createError = require('http-errors');
 var express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const {logger} = require('./Services/loggerServices');
 mongoose.Promise = global.Promise;
 var path = require('path');
 var cookieParser = require('cookie-parser');
-var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -13,16 +13,16 @@ var apiRouter = require('./routes/api');
 
 var app = express();
 
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => console.error('MongoDB connection error:', err));
+mongoose.connect(process.env.MONGODB_URI , {autoIndex:true})
+    .then(() => {logger.info('MongoDB Connected')})
+    .catch(err => logger.error('MongoDB connection error:', err));
 
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-app.use(logger('dev'));
+//app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());

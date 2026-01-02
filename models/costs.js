@@ -3,19 +3,27 @@ const Schema = mongoose.Schema;
 
 const CostsSchema = new Schema({
     description: {
-        type: String
+        type: String,
+        required: true
+
     },
     category: {
-        type: String
+        type: String,
+        required: true
+
     },
     userid: {
-        type: Number
-    },
-    date:{
-      type: Date
+        type: Number,
+        required: true
+
     },
     sum: {
-        type: Number
+        type: Number,
+        required: true
+
+    },
+    date:{
+        type: Date
     }
 });
 
