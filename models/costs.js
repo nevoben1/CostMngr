@@ -17,15 +17,13 @@ const CostsSchema = new Schema({
         required: true
 
     },
-    date:{
-      type: Date,
-        required: true
-
-    },
     sum: {
         type: Number,
         required: true
 
+    },
+    date:{
+        type: Date
     }
 });
 

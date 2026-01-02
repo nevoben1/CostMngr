@@ -1,11 +1,11 @@
 const Cost = require('../models/costs');
 const Log = require('../models/logs');
 const User = require('../models/users');
+const {logger} = require('../Services/loggerServices');
 
 
 async function createCost(costData) {
     if (!costData.date) {
-        //handle case in which the user added only date without time
         costData.date = new Date();
     }
     return await Cost.create(costData);

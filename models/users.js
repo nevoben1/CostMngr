@@ -16,7 +16,8 @@ const UsersSchema = new Schema({
         required: true
     },
     birthday: {
-        type: Date
+        type: Date,
+        required:true
     }
 });
 
