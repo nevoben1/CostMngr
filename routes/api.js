@@ -5,7 +5,7 @@ const url = require('url');
 const {logger , createInfoLog , createLogByType} = require('../Services/loggerServices');
 const logLevel = require('../Services/logLevel');
 
-const { createCost, createLog , createUser , getAllUsers , getUserById , getMonthlyReport} = require('../services/documentService');
+const { createCost, createLog , createUser , getAllUsers , getUserById , getMonthlyReport} = require('../Services/documentService');
 
 router.get('/about',function(req,res,next){
     //TBD - add log to DB

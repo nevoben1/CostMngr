@@ -13,9 +13,12 @@ var apiRouter = require('./routes/api');
 
 var app = express();
 
-mongoose.connect(process.env.MONGODB_URI , {autoIndex:true})
-    .then(() => {logger.info('MongoDB Connected')})
-    .catch(err => logger.error('MongoDB connection error:', err));
+// Only connect to the database if we are NOT in a test environment
+if (process.env.NODE_ENV !== 'test') {
+    mongoose.connect(process.env.MONGODB_URI, { autoIndex: true })
+        .then(() => { logger.info('MongoDB Connected') })
+        .catch(err => logger.error('MongoDB connection error:', err));
+}
 
 
 // view engine setup
