@@ -1,7 +1,7 @@
 const Cost = require('../models/costs');
 const Log = require('../models/logs');
 const User = require('../models/users');
-const {logger} = require('../Services/loggerServices');
+
 
 
 async function createCost(costData) {
@@ -45,4 +45,4 @@ async function getAllLogs(){
     return await Log.find({});
 }
 
-module.exports = { createCost, createLog , createUser, getAllUsers , getUserById , getMonthlyReport };
+module.exports = { createCost, createLog , createUser, getAllUsers , getUserById , getMonthlyReport, getAllLogs };
