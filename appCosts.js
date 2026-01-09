@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', costsRouter);
+app.use('/api', costsRouter);
 
 app.use(function(req, res, next) {
   next(createError(404));

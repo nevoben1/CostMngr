@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-var app = require('../appUsers');
+var app = require('../servers/appUsers');
 var debug = require('debug')('costmngr:users-service');
 var http = require('http');
 

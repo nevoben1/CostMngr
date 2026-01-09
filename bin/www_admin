@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-var app = require('../appAdmin');
+var app = require('../servers/appAdmin');
 var debug = require('debug')('costmngr:admin-service');
 var http = require('http');
 

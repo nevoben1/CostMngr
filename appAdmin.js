@@ -29,7 +29,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', adminRouter); // Mount at root or specific prefix? Reqs say "provide four different URL addresses".
+app.use('/api', adminRouter); // Mount at root or specific prefix? Reqs say "provide four different URL addresses".
 // Usually endpoints are like GET /about. So if I mount at /, it becomes GET /about. Correct.
 
 // catch 404 and forward to error handler
