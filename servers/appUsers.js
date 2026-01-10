@@ -9,6 +9,7 @@ var cookieParser = require('cookie-parser');
 
 var usersRouter = require('../routes/userRoutes');
 
+var app = express();
 
 if (process.env.NODE_ENV !== 'test') {
     mongoose.connect(process.env.MONGODB_URI, { autoIndex: true })
@@ -19,7 +20,6 @@ if (process.env.NODE_ENV !== 'test') {
 app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'pug');
 
-app.use(httpLogger);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
