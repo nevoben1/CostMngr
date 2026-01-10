@@ -20,7 +20,6 @@ if (process.env.NODE_ENV !== 'test') {
 app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'pug');
 
-app.use(httpLogger);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

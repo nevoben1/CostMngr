@@ -46,11 +46,11 @@ function createLogByType(message , type , isAddToDB = false){
 }
 
 
-function httpLogger(req, res, next) {
+/*function httpLogger(req, res, next) {
     // Log the request
     const message = `${req.method} ${req.originalUrl} called`;
     createLogByType(message, 'INFO', true);
     next();
-}
+}*/
 
-module.exports = {logger , createInfoLog , createLogByType, httpLogger};
+module.exports = {logger , createInfoLog , createLogByType};
