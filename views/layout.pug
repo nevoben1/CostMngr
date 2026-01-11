@@ -1,7 +1,13 @@
+//- Base Layout Template
+//- Provides the HTML structure and head section for all pages
+//- Child templates extend this and override the content block
+
 doctype html
 html
   head
     title= title
+    //- Link to main stylesheet
     link(rel='stylesheet', href='/stylesheets/style.css')
   body
+    //- Content block - overridden by child templates
     block content

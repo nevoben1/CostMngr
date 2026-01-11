@@ -1,8 +1,14 @@
+/* Main Stylesheet
+   Global styles for the cost management application.
+   Provides basic styling for the web interface. */
+
+/* Body styles - applies to all pages */
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  padding: 50px;  /* Add spacing around content */
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;  /* Default font stack */
 }
 
+/* Link styles - bright blue color for better visibility */
 a {
   color: #00B7FF;
 }

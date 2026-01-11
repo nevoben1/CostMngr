@@ -1,12 +1,25 @@
+/*
+   User Routes
+  
+   Provides endpoints for user management including retrieval and creation
+  */
+
 const express = require('express');
 const router = express.Router();
 const { createLogByType, createInfoLog } = require('../Services/loggerServices');
 const logLevel = require('../Services/logLevel');
 const { createUser, getAllUsers, getUserById } = require('../Services/documentService');
 
+/*
+   GET /users
+   Retrieves all users from the database
+  
+   @returns {Array<User>} Array of all user documents
+  */
 router.get('/users', async function(req, res, next) {
     try {
         createInfoLog('GET /users called', logLevel.INFO, true);
+        // Fetch all users from MongoDB
         const users = await getAllUsers();
         res.send(users);
         createLogByType('found all users', logLevel.INFO, true);
@@ -16,10 +29,18 @@ router.get('/users', async function(req, res, next) {
     }
 });
 
+/*
+   GET /users/:userId
+   Retrieves a specific user by their ID
+  
+   @param {string} userId - User ID from URL parameter
+   @returns {Array<User>} Array containing the matching user document
+  */
 router.get('/users/:userId', async function(req, res, next) {
     try {
         createLogByType('GET /users with userId ' + req.params.userId + ' called', logLevel.INFO, true);
         const userId = req.params.userId;
+        // Query user by ID
         const user = await getUserById(userId);
         res.send(user);
         createLogByType('found user: ' + JSON.stringify(user), logLevel.INFO, true);
@@ -29,11 +50,24 @@ router.get('/users/:userId', async function(req, res, next) {
     }
 });
 
+/*
+   POST /adduser
+   Creates a new user in the database
+  
+   @param {Object} req.body - User data from request body
+   @param {number} req.body.id - Unique user ID
+   @param {string} req.body.first_name - User's first name
+   @param {string} req.body.last_name - User's last name
+   @param {Date} [req.body.birthday] - User's birthday
+   @param {boolean} [req.body.marital_status] - User's marital status
+   @returns {User} Created user document
+  */
 router.post('/adduser', async function(req, res, next) {
     try {
         createLogByType('POST /adduser called', logLevel.INFO, true);
         createLogByType('Received data: ' + JSON.stringify(req.body), logLevel.INFO);
 
+        // Create new user with provided data
         const user = await createUser(req.body);
         res.send(user);
         createLogByType('created user: ' + JSON.stringify(user), logLevel.INFO, true);
