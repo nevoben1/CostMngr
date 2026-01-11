@@ -8,6 +8,7 @@
 const Cost = require('../models/costs');
 const Log = require('../models/logs');
 const User = require('../models/users');
+const CostReport = require('../models/costReports');
 
 
 
@@ -111,5 +112,51 @@ async function getAllLogs(){
     return await Log.find({});
 }
 
+/*
+   Finds a cost report for a specific user, year, and month
+
+   @param {number} userId - User ID to search for
+   @param {number} year - Year of the report
+   @param {number} month - Month of the report (1-12)
+   @returns {Promise<CostReport|null>} Cost report document if found, null otherwise
+  */
+async function findCostReport(userId, year, month) {
+    return await CostReport.findOne({
+        userId: parseInt(userId),
+        year: parseInt(year),
+        month: parseInt(month)
+    });
+}
+
+/*
+   Creates or updates a cost report for a specific user, year, and month
+   Uses upsert to either update existing document or create new one
+
+   @param {number} userId - User ID
+   @param {number} year - Year of the report
+   @param {number} month - Month of the report (1-12)
+   @param {Array} costs - Array of category objects with cost items
+   @returns {Promise<CostReport>} Updated or created cost report document
+  */
+async function upsertCostReport(userId, year, month, costs) {
+    return await CostReport.findOneAndUpdate(
+        {
+            userId: parseInt(userId),
+            year: parseInt(year),
+            month: parseInt(month)
+        },
+        {
+            userId: parseInt(userId),
+            year: parseInt(year),
+            month: parseInt(month),
+            costs: costs
+        },
+        {
+            upsert: true,  // Create if doesn't exist
+            new: true      // Return the updated document
+        }
+    );
+}
+
 // Export all service functions for use in routes and controllers
-module.exports = { createCost, createLog , createUser, getAllUsers , getUserById , getMonthlyReport, getAllLogs };
+module.exports = { createCost, createLog , createUser, getAllUsers , getUserById , getMonthlyReport, getAllLogs, findCostReport, upsertCostReport };

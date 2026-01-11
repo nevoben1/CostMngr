@@ -9,31 +9,25 @@ const router = express.Router();
 const url = require('url');
 const { createLogByType, createInfoLog } = require('../Services/loggerServices');
 const logLevel = require('../Services/logLevel');
-const { createCost, getMonthlyReport } = require('../Services/documentService');
-
-/*
-   In-memory cache for monthly cost reports
-   Maps query key ({userId}-{year}-{month}) to aggregated costs array
-   Improves performance by avoiding redundant database queries
-  */
-let costsObjMap = new Map();
+const { createCost, getMonthlyReport, findCostReport, upsertCostReport } = require('../Services/documentService');
 
 /*
    GET /report
-   Generates a monthly cost report for a specific user
-  
+   Retrieves or generates a monthly cost report for a specific user
+
    Query parameters:
    @param {string} id - User ID
    @param {string} year - Year (e.g., "2024")
    @param {string} month - Month (1-12)
-  
+
    @returns {Object} Report object with costs grouped by category
    @returns {number} return.userId - User ID
    @returns {number} return.year - Year
    @returns {number} return.month - Month
    @returns {Array<Object>} return.costs - Costs grouped by category
-  
-   Uses in-memory caching to improve performance for repeated queries
+
+   Searches for existing report in database. If not found, generates report
+   from individual cost entries and saves it to database for future queries.
   */
 router.get('/report', async function(req, res, next) {
     try {
@@ -51,18 +45,19 @@ router.get('/report', async function(req, res, next) {
             createLogByType('invalid month parameter passed , aborting', logLevel.ERROR, true);
             return res.status(400).send({"invalid month param": parsedUrl.query.month});
         }
-        // Create cache key from query parameters
-        const queryObj = `${userId}-${year}-${month}`;
-        // Check if report has been cached
+
+        // Check if report exists in database
+        let costReport = await findCostReport(userId, year, month);
         let costsArray = [];
-        if(costsObjMap.has(queryObj)){
-            // Return cached report for improved performance
-            createLogByType("found the query obj using it", logLevel.INFO);
-            costsArray = costsObjMap.get(queryObj);
+
+        if(costReport){
+            // Report found in database
+            createLogByType("found existing cost report in database", logLevel.INFO);
+            costsArray = costReport.costs;
         }
         else{
-            // Generate new report from database
-            createLogByType("the query obj was not found", logLevel.INFO);
+            // Generate new report from individual cost entries
+            createLogByType("cost report not found, generating from individual costs", logLevel.INFO);
             // Query MongoDB for costs in the specified month
             const costs = await getMonthlyReport(userId, year, month);
             // Group costs by category for organized reporting
@@ -83,8 +78,9 @@ router.get('/report', async function(req, res, next) {
             }
             // Convert Map to array of objects for JSON response
             costsArray = Array.from(categoriesToCosts, ([category, items]) => ({[category]: items}));
-            // Cache the result for future requests
-            costsObjMap.set(queryObj, costsArray);
+            // Save the generated report to database
+            costReport = await upsertCostReport(userId, year, month, costsArray);
+            createLogByType("saved cost report to database", logLevel.INFO);
         }
         // Build response object with parsed integers
         const retVal = {userId: parseInt(userId), year: parseInt(year), month: parseInt(month), costs: costsArray};
