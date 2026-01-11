@@ -1,6 +1,13 @@
+//- Error Page Template
+//- Displays error information including message, status code, and stack trace
+//- Stack trace is only shown in development mode (controlled by app.js)
+
 extends layout
 
 block content
+  //- Error message (e.g., "Not Found", "Internal Server Error")
   h1= message
+  //- HTTP status code (e.g., 404, 500)
   h2= error.status
+  //- Full error stack trace for debugging (dev mode only)
   pre #{error.stack}

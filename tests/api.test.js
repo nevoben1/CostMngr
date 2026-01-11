@@ -1,8 +1,13 @@
+/* API Routes Test Suite
+   Tests the main API endpoints for the cost management application.
+   Uses Jest and Supertest for integration testing.
+   Mocks database and logging services to avoid side effects. */
+
 const request = require('supertest');
 const app = require('../app');
 const documentService = require('../Services/documentService');
 
-// Mock the documentService to avoid actual DB calls
+// Mock the documentService to avoid actual DB calls during tests
 jest.mock('../Services/documentService');
 // Mock the loggerServices to avoid side effects (DB writes for logs)
 jest.mock('../Services/loggerServices', () => ({
