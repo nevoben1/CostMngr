@@ -26,7 +26,8 @@ const { createCost, getMonthlyReport, findCostReport, upsertCostReport } = requi
    @returns {number} return.month - Month
    @returns {Array<Object>} return.costs - Costs grouped by category
 
-   Searches for existing report in database. If not found, generates report
+   For current month: Always generates fresh report (not saved to DB as data may change)
+   For past months: Searches database for existing report. If not found, generates report
    from individual cost entries and saves it to database for future queries.
   */
 router.get('/report', async function(req, res, next) {
@@ -46,18 +47,17 @@ router.get('/report', async function(req, res, next) {
             return res.status(400).send({"invalid month param": parsedUrl.query.month});
         }
 
-        // Check if report exists in database
-        let costReport = await findCostReport(userId, year, month);
+        // Check if the requested report is for the current month/year
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1; // getMonth() returns 0-11
+        const isCurrentMonth = (parseInt(year) === currentYear && monthAsInt === currentMonth);
+
         let costsArray = [];
 
-        if(costReport){
-            // Report found in database
-            createLogByType("found existing cost report in database", logLevel.INFO);
-            costsArray = costReport.costs;
-        }
-        else{
-            // Generate new report from individual cost entries
-            createLogByType("cost report not found, generating from individual costs", logLevel.INFO);
+        if(isCurrentMonth){
+            // Current month - always generate fresh report without saving to DB
+            createLogByType("generating fresh report for current month (not saving to DB)", logLevel.INFO);
             // Query MongoDB for costs in the specified month
             const costs = await getMonthlyReport(userId, year, month);
             // Group costs by category for organized reporting
@@ -78,9 +78,43 @@ router.get('/report', async function(req, res, next) {
             }
             // Convert Map to array of objects for JSON response
             costsArray = Array.from(categoriesToCosts, ([category, items]) => ({[category]: items}));
-            // Save the generated report to database
-            costReport = await upsertCostReport(userId, year, month, costsArray);
-            createLogByType("saved cost report to database", logLevel.INFO);
+        }
+        else{
+            // Past month - check database first
+            let costReport = await findCostReport(userId, year, month);
+
+            if(costReport){
+                // Report found in database
+                createLogByType("found existing cost report in database", logLevel.INFO);
+                costsArray = costReport.costs;
+            }
+            else{
+                // Generate new report from individual cost entries
+                createLogByType("cost report not found, generating from individual costs", logLevel.INFO);
+                // Query MongoDB for costs in the specified month
+                const costs = await getMonthlyReport(userId, year, month);
+                // Group costs by category for organized reporting
+                const categoriesToCosts = new Map();
+                for(const cost of costs){
+                    createLogByType(cost, logLevel.INFO);
+                    const category = cost.category;
+                    const day = new Date(cost.date).getDate();
+                    // Create cost item with sum, description, and day
+                    const objToAdd = {sum: cost.sum, description: cost.description, day: day};
+                    // Add to existing category or create new category entry
+                    if(categoriesToCosts.has(category)){
+                        categoriesToCosts.get(category).push(objToAdd);
+                    }
+                    else{
+                        categoriesToCosts.set(category, [objToAdd]);
+                    }
+                }
+                // Convert Map to array of objects for JSON response
+                costsArray = Array.from(categoriesToCosts, ([category, items]) => ({[category]: items}));
+                // Save the generated report to database for future queries
+                costReport = await upsertCostReport(userId, year, month, costsArray);
+                createLogByType("saved cost report to database", logLevel.INFO);
+            }
         }
         // Build response object with parsed integers
         const retVal = {userId: parseInt(userId), year: parseInt(year), month: parseInt(month), costs: costsArray};
