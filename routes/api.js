@@ -20,7 +20,8 @@ const logLevel = require('../Services/logLevel');
   */
 let costsObjMap = new Map();
 
-const { createCost, createLog , createUser , getAllUsers , getUserById , getMonthlyReport} = require('../services/documentService');
+const { createCost, createLog , createUser , getAllUsers , getUserById , getMonthlyReport} = require('../Services/documentService');
+const { verifyUserExists } = require('../Services/userValidationService');
 
 /*
    GET /about
@@ -181,19 +182,22 @@ router.get('/users/:userId' , async function(req,res,next){
 /*
    POST /add
    Creates a new cost entry
-  
+
    @param {Object} req.body - Cost data from request body
-   @param {number} req.body.userid - User ID who incurred the cost
+   @param {number} req.body.userid - User ID who incurred the cost (verified against external user service)
    @param {number} req.body.year - Year of the cost
    @param {number} req.body.month - Month of the cost (1-12)
    @param {string} req.body.category - Cost category (must be in SUPPORTED_CATEGORIES env var)
    @param {string} req.body.description - Description of the cost
    @param {number} req.body.sum - Cost amount
    @param {Date} [req.body.date] - Date of the cost (defaults to current date if not provided)
-  
+
    @returns {Cost} Created cost document
-  
-   Validates category against environment variable and ensures date is not in the past
+   @returns {404} If user does not exist in the user service
+   @returns {503} If unable to verify user existence
+
+   Verifies user exists via external service, validates category against environment variable,
+   and ensures date is not in the past
   */
 router.post('/add' , async function(req,res,next){
     try {
@@ -201,6 +205,24 @@ router.post('/add' , async function(req,res,next){
         //logger.info('POST /add called');
         createLogByType('Received data: '+ JSON.stringify(req.body) , logLevel.INFO);
         //logger.info('Received data: '+ JSON.stringify(req.body));
+
+        // Verify that the user exists before creating the cost
+        const userId = req.body.userid;
+        if (!userId) {
+            createLogByType('Missing userid in request body', logLevel.ERROR, true);
+            return res.status(400).send({"error": "userid is required"});
+        }
+
+        try {
+            const userExists = await verifyUserExists(userId);
+            if (!userExists) {
+                createLogByType(`User ${userId} does not exist, cannot create cost`, logLevel.ERROR, true);
+                return res.status(404).send({"error": `User with id ${userId} does not exist`});
+            }
+        } catch (error) {
+            createLogByType(`Error verifying user ${userId}: ${error.message}`, logLevel.ERROR, true);
+            return res.status(503).send({"error": "Unable to verify user existence", "details": error.message});
+        }
 
         // Validate category against supported categories from environment
         const categories = process.env.SUPPORTED_CATEGORIES.split(',').map(cat => cat.trim());

@@ -6,9 +6,12 @@
 const request = require('supertest');
 const app = require('../app');
 const documentService = require('../Services/documentService');
+const userValidationService = require('../Services/userValidationService');
 
 // Mock the documentService to avoid actual DB calls during tests
 jest.mock('../Services/documentService');
+// Mock the userValidationService to avoid external API calls during tests
+jest.mock('../Services/userValidationService');
 // Mock the loggerServices to avoid side effects (DB writes for logs)
 jest.mock('../Services/loggerServices', () => ({
     createLogByType: jest.fn(),
@@ -127,12 +130,15 @@ describe('API Routes', () => {
     });
 
     describe('POST /api/add', () => {
-        it('should create a new cost item', async () => {
+        it('should create a new cost item when user exists', async () => {
              // Set supported categories in environment variables
              process.env.SUPPORTED_CATEGORIES = 'food,travel';
 
              // Define the new cost item to be added
-             const newCost = { category: 'food', sum: 200, description: 'groceries' };
+             const newCost = { userid: 123, category: 'food', sum: 200, description: 'groceries' };
+
+             // Mock user validation to return true (user exists)
+             userValidationService.verifyUserExists.mockResolvedValue(true);
 
              // Mock the createCost service to return the input
              documentService.createCost.mockResolvedValue(newCost);
@@ -147,17 +153,83 @@ describe('API Routes', () => {
 
              // Verify the response matches the created cost
              expect(res.body).toEqual(newCost);
+
+             // Verify that user validation was called
+             expect(userValidationService.verifyUserExists).toHaveBeenCalledWith(123);
+        });
+
+        it('should return 404 when user does not exist', async () => {
+            // Set supported categories in environment variables
+            process.env.SUPPORTED_CATEGORIES = 'food,travel';
+
+            // Mock user validation to return false (user doesn't exist)
+            userValidationService.verifyUserExists.mockResolvedValue(false);
+
+            // Send POST request with a cost for non-existent user
+            const res = await request(app)
+                .post('/api/add')
+                .send({ userid: 999, category: 'food', sum: 100, description: 'test' });
+
+            // Expect 404 Not Found status
+            expect(res.statusCode).toEqual(404);
+
+            // Verify error message
+            expect(res.body).toHaveProperty('error');
+            expect(res.body.error).toContain('does not exist');
+
+            // Verify that createCost was never called
+            expect(documentService.createCost).not.toHaveBeenCalled();
+        });
+
+        it('should return 400 when userid is missing', async () => {
+            // Set supported categories in environment variables
+            process.env.SUPPORTED_CATEGORIES = 'food,travel';
+
+            // Send POST request without userid
+            const res = await request(app)
+                .post('/api/add')
+                .send({ category: 'food', sum: 100, description: 'test' });
+
+            // Expect 400 Bad Request status
+            expect(res.statusCode).toEqual(400);
+
+            // Verify error message
+            expect(res.body).toHaveProperty('error');
+            expect(res.body.error).toContain('userid is required');
+        });
+
+        it('should return 503 when user validation service fails', async () => {
+            // Set supported categories in environment variables
+            process.env.SUPPORTED_CATEGORIES = 'food,travel';
+
+            // Mock user validation to throw an error
+            userValidationService.verifyUserExists.mockRejectedValue(new Error('Service unavailable'));
+
+            // Send POST request
+            const res = await request(app)
+                .post('/api/add')
+                .send({ userid: 123, category: 'food', sum: 100, description: 'test' });
+
+            // Expect 503 Service Unavailable status
+            expect(res.statusCode).toEqual(503);
+
+            // Verify error message
+            expect(res.body).toHaveProperty('error');
+            expect(res.body.error).toContain('Unable to verify user');
         });
 
         it('should return 400 for invalid category', async () => {
             // Define supported categories
             process.env.SUPPORTED_CATEGORIES = 'food,travel';
 
+            // Mock user validation to return true
+            userValidationService.verifyUserExists.mockResolvedValue(true);
+
             // Send POST request with an unsupported category
             const res = await request(app)
                 .post('/api/add')
-                .send({ category: 'invalid', sum: 100 });
-            
+                .send({ userid: 123, category: 'invalid', sum: 100 });
+
             // Expect 400 Bad Request status
             expect(res.statusCode).toEqual(400);
         });
