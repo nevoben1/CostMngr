@@ -14,6 +14,7 @@ var express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();  // Load environment variables from .env file
 const {logger} = require('./Services/loggerServices');
+const { ErrorIds, createErrorResponse } = require('./utils/errorResponse');
 mongoose.Promise = global.Promise;
 var path = require('path');
 var cookieParser = require('cookie-parser');
@@ -53,15 +54,22 @@ app.use(function(req, res, next) {
   next(createError(404));
 });
 
-// Error handler middleware
+// Error handler middleware - returns JSON responses
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};  // Only show stack trace in development
+  const statusCode = err.status || 500;
+  const errorId = statusCode === 404 ? ErrorIds.RESOURCE_NOT_FOUND : ErrorIds.INTERNAL_SERVER_ERROR;
+  const message = err.message || 'An unexpected error occurred';
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  // Create base error response
+  const errorResponse = createErrorResponse(errorId, message);
+
+  // Include stack trace in development mode
+  if (req.app.get('env') === 'development') {
+    errorResponse.stack = err.stack;
+  }
+
+  // Send JSON error response
+  res.status(statusCode).json(errorResponse);
 });
 
 module.exports = app;
