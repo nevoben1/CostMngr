@@ -34,6 +34,14 @@ const UsersSchema = new Schema({
         type: Date,
         required:true
     }
+}, {
+    toJSON: {
+        transform: function(doc, ret) {
+            delete ret._id;
+            delete ret.__v;
+            return ret;
+        }
+    }
 });
 
 // Create and export Mongoose model for 'users' collection
