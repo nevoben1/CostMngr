@@ -9,31 +9,26 @@ const router = express.Router();
 const url = require('url');
 const { createLogByType, createInfoLog } = require('../Services/loggerServices');
 const logLevel = require('../Services/logLevel');
-const { createCost, getMonthlyReport } = require('../Services/documentService');
-
-/*
-   In-memory cache for monthly cost reports
-   Maps query key ({userId}-{year}-{month}) to aggregated costs array
-   Improves performance by avoiding redundant database queries
-  */
-let costsObjMap = new Map();
+const { createCost, getMonthlyReport, findCostReport, upsertCostReport } = require('../Services/documentService');
 
 /*
    GET /report
-   Generates a monthly cost report for a specific user
-  
+   Retrieves or generates a monthly cost report for a specific user
+
    Query parameters:
    @param {string} id - User ID
    @param {string} year - Year (e.g., "2024")
    @param {string} month - Month (1-12)
-  
+
    @returns {Object} Report object with costs grouped by category
    @returns {number} return.userId - User ID
    @returns {number} return.year - Year
    @returns {number} return.month - Month
    @returns {Array<Object>} return.costs - Costs grouped by category
-  
-   Uses in-memory caching to improve performance for repeated queries
+
+   For current month: Always generates fresh report (not saved to DB as data may change)
+   For past months: Searches database for existing report. If not found, generates report
+   from individual cost entries and saves it to database for future queries.
   */
 router.get('/report', async function(req, res, next) {
     try {
@@ -51,18 +46,35 @@ router.get('/report', async function(req, res, next) {
             createLogByType('invalid month parameter passed , aborting', logLevel.ERROR, true);
             return res.status(400).send({"invalid month param": parsedUrl.query.month});
         }
-        // Create cache key from query parameters
-        const queryObj = `${userId}-${year}-${month}`;
-        // Check if report has been cached
+
+        // Check if the requested report is for the current month/year
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1; // getMonth() returns 0-11
+        const isCurrentMonth = (parseInt(year) === currentYear && monthAsInt === currentMonth);
+
         let costsArray = [];
-        if(costsObjMap.has(queryObj)){
-            // Return cached report for improved performance
-            createLogByType("found the query obj using it", logLevel.INFO);
-            costsArray = costsObjMap.get(queryObj);
+        let shouldGenerateReport = true;
+
+        // For past months, check if report exists in database
+        if(!isCurrentMonth){
+            const costReport = await findCostReport(userId, year, month);
+            if(costReport){
+                // Report found in database - use cached version
+                createLogByType("found existing cost report in database", logLevel.INFO);
+                costsArray = costReport.costs;
+                shouldGenerateReport = false;
+            }
         }
-        else{
-            // Generate new report from database
-            createLogByType("the query obj was not found", logLevel.INFO);
+
+        // Generate report if needed (current month or past month not in DB)
+        if(shouldGenerateReport){
+            if(isCurrentMonth){
+                createLogByType("generating fresh report for current month (not saving to DB)", logLevel.INFO);
+            } else {
+                createLogByType("cost report not found, generating from individual costs", logLevel.INFO);
+            }
+
             // Query MongoDB for costs in the specified month
             const costs = await getMonthlyReport(userId, year, month);
             // Group costs by category for organized reporting
@@ -83,8 +95,12 @@ router.get('/report', async function(req, res, next) {
             }
             // Convert Map to array of objects for JSON response
             costsArray = Array.from(categoriesToCosts, ([category, items]) => ({[category]: items}));
-            // Cache the result for future requests
-            costsObjMap.set(queryObj, costsArray);
+
+            // Save to database only if it's a past month
+            if(!isCurrentMonth){
+                await upsertCostReport(userId, year, month, costsArray);
+                createLogByType("saved cost report to database", logLevel.INFO);
+            }
         }
         // Build response object with parsed integers
         const retVal = {userId: parseInt(userId), year: parseInt(year), month: parseInt(month), costs: costsArray};
