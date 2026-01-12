@@ -41,6 +41,14 @@ const CostsSchema = new Schema({
     date:{
         type: Date  // Optional timestamp for the expense
     }
+}, {
+    toJSON: {
+        transform: function(doc, ret) {
+            delete ret._id;
+            delete ret.__v;
+            return ret;
+        }
+    }
 });
 
 // Create and export Mongoose model for 'costs' collection

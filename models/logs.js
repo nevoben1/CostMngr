@@ -25,6 +25,14 @@ const LogsSchema = new Schema({
     type: {
         type: String  // Severity level for filtering and alerting
     }
+}, {
+    toJSON: {
+        transform: function(doc, ret) {
+            delete ret._id;
+            delete ret.__v;
+            return ret;
+        }
+    }
 });
 
 // Create and export Mongoose model for 'logs' collection
