@@ -22,6 +22,7 @@ let costsObjMap = new Map();
 
 const { createCost, createLog , createUser , getAllUsers , getUserById , getMonthlyReport} = require('../Services/documentService');
 const { verifyUserExists } = require('../Services/userValidationService');
+const { ErrorIds, sendErrorResponse } = require('../utils/errorResponse');
 
 /*
    GET /about
@@ -75,7 +76,7 @@ router.get('/report' , async function(req,res,next){
         if(monthAsInt < 1 || monthAsInt > 12){
             createLogByType('invalid month parameter passed , aborting' , logLevel.ERROR , true);
             //logger.error('invalid month parameter passed , aborting');
-            return res.status(400).send({"invalid month param":parsedUrl.query.month});
+            return sendErrorResponse(res, 400, ErrorIds.INVALID_MONTH, `Invalid month parameter: ${parsedUrl.query.month}. Month must be between 1 and 12`);
         }
         // Create cache key from query parameters
         const queryObj =  `${userId}-${year}-${month}`;
@@ -210,18 +211,18 @@ router.post('/add' , async function(req,res,next){
         const userId = req.body.userid;
         if (!userId) {
             createLogByType('Missing userid in request body', logLevel.ERROR, true);
-            return res.status(400).send({"error": "userid is required"});
+            return sendErrorResponse(res, 400, ErrorIds.MISSING_USERID, 'userid is required in request body');
         }
 
         try {
             const userExists = await verifyUserExists(userId);
             if (!userExists) {
                 createLogByType(`User ${userId} does not exist, cannot create cost`, logLevel.ERROR, true);
-                return res.status(404).send({"error": `User with id ${userId} does not exist`});
+                return sendErrorResponse(res, 404, ErrorIds.USER_NOT_FOUND, `User with id ${userId} does not exist`);
             }
         } catch (error) {
             createLogByType(`Error verifying user ${userId}: ${error.message}`, logLevel.ERROR, true);
-            return res.status(503).send({"error": "Unable to verify user existence", "details": error.message});
+            return sendErrorResponse(res, 503, ErrorIds.USER_SERVICE_ERROR, 'Unable to verify user existence', { details: error.message });
         }
 
         // Validate category against supported categories from environment
@@ -229,14 +230,14 @@ router.post('/add' , async function(req,res,next){
         if(!categories.includes(req.body.category))
         {
           createLogByType("invalid category: "+ req.body.category , logLevel.ERROR , true);
-          return res.status(400).send({"invalid category":req.body.category});
+          return sendErrorResponse(res, 400, ErrorIds.INVALID_CATEGORY, `Invalid category: ${req.body.category}. Supported categories are: ${categories.join(', ')}`);
         }
         // Validate that date is not in the past (if provided)
         if(req.body.date)
         {
             const currCostDate = new Date(req.body.date);
             if(currCostDate < new Date()){
-                return res.status(400).send({"invalid date":req.body.date});
+                return sendErrorResponse(res, 400, ErrorIds.INVALID_DATE, `Invalid date: ${req.body.date}. Date cannot be in the past`);
             }
         }
         // Create cost entry in database
