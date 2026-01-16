@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-const app = require('../servers/appUsers');
+const app = require('../servers/AppUsers');
 const debug = require('debug')('costmngr:users-service');
 const http = require('http');
 

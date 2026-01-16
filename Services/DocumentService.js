@@ -5,10 +5,10 @@
    Provides CRUD operations for Costs, Logs, and Users collections.
   */
 
-const Cost = require('../models/costs');
-const Log = require('../models/logs');
-const User = require('../models/users');
-const CostReport = require('../models/costReports');
+const Cost = require('../models/Costs');
+const Log = require('../models/Logs');
+const User = require('../models/Users');
+const CostReport = require('../models/CostReports');
 
 
 

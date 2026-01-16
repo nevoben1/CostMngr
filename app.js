@@ -13,7 +13,7 @@ const createError = require('http-errors');
 const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();  // Load environment variables from .env file
-const {logger} = require('./Services/loggerServices');
+const {logger} = require('./Services/LoggerServices');
 const { ErrorIds, createErrorResponse } = require('./utils/errorResponse');
 mongoose.Promise = global.Promise;
 const path = require('path');

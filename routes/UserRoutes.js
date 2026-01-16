@@ -6,9 +6,9 @@
 
 const express = require('express');
 const router = express.Router();
-const { createLogByType, createInfoLog } = require('../Services/loggerServices');
-const logLevel = require('../Services/logLevel');
-const { createUser, getAllUsers, getUserById } = require('../Services/documentService');
+const { createLogByType, createInfoLog } = require('../Services/LoggerServices');
+const logLevel = require('../Services/LogLevel');
+const { createUser, getAllUsers, getUserById } = require('../Services/DocumentService');
 const { ErrorIds, sendErrorResponse } = require('../utils/errorResponse');
 
 /*

@@ -2,7 +2,7 @@
    Users Route (Legacy)
   
    Legacy placeholder route for users.
-   Actual user functionality is implemented in userRoutes.js
+   Actual user functionality is implemented in UserRoutes.js
   */
 
 const express = require('express');

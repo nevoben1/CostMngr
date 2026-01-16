@@ -5,15 +5,15 @@
 
 const request = require('supertest');
 const app = require('../app');
-const documentService = require('../Services/documentService');
-const userValidationService = require('../Services/userValidationService');
+const documentService = require('../Services/DocumentService');
+const userValidationService = require('../Services/UserValidationService');
 
 // Mock the documentService to avoid actual DB calls during tests
-jest.mock('../Services/documentService');
+jest.mock('../Services/DocumentService');
 // Mock the userValidationService to avoid external API calls during tests
-jest.mock('../Services/userValidationService');
+jest.mock('../Services/UserValidationService');
 // Mock the loggerServices to avoid side effects (DB writes for logs)
-jest.mock('../Services/loggerServices', () => ({
+jest.mock('../Services/LoggerServices', () => ({
     createLogByType: jest.fn(),
     createLog: jest.fn(),
     createInfoLog: jest.fn(),
