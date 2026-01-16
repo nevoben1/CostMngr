@@ -50,8 +50,10 @@ describe('API Routes', () => {
             // Expect a 400 Bad Request status code
             expect(res.statusCode).toEqual(400);
 
-            // Check if the response contains the expected error property
-            expect(res.body).toHaveProperty('invalid month param');
+            // Check if the response contains the expected error properties
+            expect(res.body).toHaveProperty('id', 'INVALID_MONTH');
+            expect(res.body).toHaveProperty('message');
+            expect(res.body.message).toContain('Invalid month parameter');
         });
 
         it('should return monthly report for valid parameters', async () => {
@@ -173,9 +175,10 @@ describe('API Routes', () => {
             // Expect 404 Not Found status
             expect(res.statusCode).toEqual(404);
 
-            // Verify error message
-            expect(res.body).toHaveProperty('error');
-            expect(res.body.error).toContain('does not exist');
+            // Verify error properties
+            expect(res.body).toHaveProperty('id', 'USER_NOT_FOUND');
+            expect(res.body).toHaveProperty('message');
+            expect(res.body.message).toContain('does not exist');
 
             // Verify that createCost was never called
             expect(documentService.createCost).not.toHaveBeenCalled();
@@ -193,9 +196,10 @@ describe('API Routes', () => {
             // Expect 400 Bad Request status
             expect(res.statusCode).toEqual(400);
 
-            // Verify error message
-            expect(res.body).toHaveProperty('error');
-            expect(res.body.error).toContain('userid is required');
+            // Verify error properties
+            expect(res.body).toHaveProperty('id', 'MISSING_USERID');
+            expect(res.body).toHaveProperty('message');
+            expect(res.body.message).toContain('userid is required');
         });
 
         it('should return 503 when user validation service fails', async () => {
@@ -213,9 +217,10 @@ describe('API Routes', () => {
             // Expect 503 Service Unavailable status
             expect(res.statusCode).toEqual(503);
 
-            // Verify error message
-            expect(res.body).toHaveProperty('error');
-            expect(res.body.error).toContain('Unable to verify user');
+            // Verify error properties
+            expect(res.body).toHaveProperty('id', 'USER_SERVICE_ERROR');
+            expect(res.body).toHaveProperty('message');
+            expect(res.body.message).toContain('Unable to verify user');
         });
 
         it('should return 400 for invalid category', async () => {

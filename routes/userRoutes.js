@@ -62,7 +62,7 @@ router.get('/users/:userId', async function(req, res, next) {
    @param {boolean} [req.body.marital_status] - User's marital status
    @returns {User} Created user document
   */
-router.post('/adduser', async function(req, res, next) {
+router.post('/add', async function(req, res, next) {
     try {
         createLogByType('POST /adduser called', logLevel.INFO, true);
         createLogByType('Received data: ' + JSON.stringify(req.body), logLevel.INFO);

@@ -4,8 +4,8 @@
    Handles the root URL and renders the home page template
   */
 
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
 /*
    GET /
