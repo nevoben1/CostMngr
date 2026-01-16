@@ -9,22 +9,22 @@
    - Provides consolidated API endpoints under /api
    - Serves static files from /public directory */
 
-var createError = require('http-errors');
-var express = require('express');
+const createError = require('http-errors');
+const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();  // Load environment variables from .env file
 const {logger} = require('./Services/loggerServices');
 const { ErrorIds, createErrorResponse } = require('./utils/errorResponse');
 mongoose.Promise = global.Promise;
-var path = require('path');
-var cookieParser = require('cookie-parser');
+const path = require('path');
+const cookieParser = require('cookie-parser');
 
 // Import route handlers
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var apiRouter = require('./routes/api');
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const apiRouter = require('./routes/api');
 
-var app = express();
+const app = express();
 
 // Connect to MongoDB (skip in test environment)
 if (process.env.NODE_ENV !== 'test') {

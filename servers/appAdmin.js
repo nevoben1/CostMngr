@@ -6,21 +6,21 @@
    Handles administrative endpoints like team member information.
   */
 
-var createError = require('http-errors');
-var express = require('express');
+const createError = require('http-errors');
+const express = require('express');
 const mongoose = require('mongoose');
-var path = require('path');
+const path = require('path');
 // Load environment variables from parent directory
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const {logger, httpLogger} = require('../Services/loggerServices');
 const { ErrorIds, createErrorResponse } = require('../utils/errorResponse');
 mongoose.Promise = global.Promise;
-var cookieParser = require('cookie-parser');
+const cookieParser = require('cookie-parser');
 
 // Import admin routes
-var adminRouter = require('../routes/adminRoutes');
+const adminRouter = require('../routes/adminRoutes');
 
-var app = express();
+const app = express();
 
 // Connect to MongoDB (skip in test environment)
 if (process.env.NODE_ENV !== 'test') {
