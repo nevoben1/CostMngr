@@ -12,13 +12,13 @@ const mongoose = require('mongoose');
 const path = require('path');
 // Load environment variables from parent directory
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
-const {logger, httpLogger} = require('../Services/loggerServices');
+const {logger, httpLogger} = require('../Services/LoggerServices');
 const { ErrorIds, createErrorResponse } = require('../utils/errorResponse');
 mongoose.Promise = global.Promise;
 const cookieParser = require('cookie-parser');
 
 // Import admin routes
-const adminRouter = require('../routes/adminRoutes');
+const adminRouter = require('../routes/AdminRoutes');
 
 const app = express();
 

@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-const app = require('../servers/appCosts');
+const app = require('../servers/AppCosts');
 const debug = require('debug')('costmngr:costs-service');
 const http = require('http');
 

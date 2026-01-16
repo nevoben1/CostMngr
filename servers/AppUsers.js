@@ -1,9 +1,9 @@
 /*
-   Logs Microservice
+   Users Microservice
   
-   Express application dedicated to log retrieval operations.
-   Part of the microservices architecture - runs independently on port 3004.
-   Provides access to persisted application logs from MongoDB.
+   Express application dedicated to user management operations.
+   Part of the microservices architecture - runs independently on port 3002.
+   Handles user CRUD operations and user-related queries.
   */
 
 const createError = require('http-errors');
@@ -12,20 +12,20 @@ const mongoose = require('mongoose');
 const path = require('path');
 // Load environment variables from parent directory
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
-const {logger, httpLogger} = require('../Services/loggerServices');
+const {logger, httpLogger} = require('../Services/LoggerServices');
 const { ErrorIds, createErrorResponse } = require('../utils/errorResponse');
 mongoose.Promise = global.Promise;
 const cookieParser = require('cookie-parser');
 
-// Import log routes
-const logsRouter = require('../routes/logRoutes');
+// Import user routes
+const usersRouter = require('../routes/UserRoutes');
 
 const app = express();
 
 // Connect to MongoDB (skip in test environment)
 if (process.env.NODE_ENV !== 'test') {
     mongoose.connect(process.env.MONGODB_URI, { autoIndex: true })
-        .then(() => { logger.info('MongoDB Connected (Logs Service)') })
+        .then(() => { logger.info('MongoDB Connected (Users Service)') })
         .catch(err => logger.error('MongoDB connection error:', err));
 }
 
@@ -39,8 +39,8 @@ app.use(express.urlencoded({ extended: false }));     // Parse URL-encoded reque
 app.use(cookieParser());                              // Parse cookies
 app.use(express.static(path.join(__dirname, '../public')));  // Serve static files
 
-// Mount log routes under /api prefix
-app.use('/api', logsRouter);
+// Mount user routes under /api prefix
+app.use('/api', usersRouter);
 
 // Handle 404 errors - route not found
 app.use(function(req, res, next) {

@@ -5,8 +5,8 @@
   */
 
 const https = require('https');
-const { createLogByType } = require('./loggerServices');
-const logLevel = require('./logLevel');
+const { createLogByType } = require('./LoggerServices');
+const logLevel = require('./LogLevel');
 
 // External user service base URL
 const USER_SERVICE_BASE_URL = 'costmngr-users.onrender.com';

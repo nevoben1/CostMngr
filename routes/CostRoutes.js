@@ -7,10 +7,10 @@
 const express = require('express');
 const router = express.Router();
 const url = require('url');
-const { createLogByType, createInfoLog } = require('../Services/loggerServices');
-const logLevel = require('../Services/logLevel');
-const { createCost, getMonthlyReport, findCostReport, upsertCostReport } = require('../Services/documentService');
-const { verifyUserExists } = require('../Services/userValidationService');
+const { createLogByType, createInfoLog } = require('../Services/LoggerServices');
+const logLevel = require('../Services/LogLevel');
+const { createCost, getMonthlyReport, findCostReport, upsertCostReport } = require('../Services/DocumentService');
+const { verifyUserExists } = require('../Services/UserValidationService');
 const { ErrorIds, sendErrorResponse } = require('../utils/errorResponse');
 
 /*

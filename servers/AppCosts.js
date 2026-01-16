@@ -1,9 +1,9 @@
 /*
-   Users Microservice
+   Costs Microservice
   
-   Express application dedicated to user management operations.
-   Part of the microservices architecture - runs independently on port 3002.
-   Handles user CRUD operations and user-related queries.
+   Express application dedicated to cost/expense management operations.
+   Part of the microservices architecture - runs independently on port 3003.
+   Handles cost creation and monthly reporting functionality.
   */
 
 const createError = require('http-errors');
@@ -12,20 +12,20 @@ const mongoose = require('mongoose');
 const path = require('path');
 // Load environment variables from parent directory
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
-const {logger, httpLogger} = require('../Services/loggerServices');
+const {logger, httpLogger} = require('../Services/LoggerServices');
 const { ErrorIds, createErrorResponse } = require('../utils/errorResponse');
 mongoose.Promise = global.Promise;
 const cookieParser = require('cookie-parser');
 
-// Import user routes
-const usersRouter = require('../routes/userRoutes');
+// Import cost routes
+const costsRouter = require('../routes/CostRoutes');
 
 const app = express();
 
 // Connect to MongoDB (skip in test environment)
 if (process.env.NODE_ENV !== 'test') {
     mongoose.connect(process.env.MONGODB_URI, { autoIndex: true })
-        .then(() => { logger.info('MongoDB Connected (Users Service)') })
+        .then(() => { logger.info('MongoDB Connected (Costs Service)') })
         .catch(err => logger.error('MongoDB connection error:', err));
 }
 
@@ -39,8 +39,8 @@ app.use(express.urlencoded({ extended: false }));     // Parse URL-encoded reque
 app.use(cookieParser());                              // Parse cookies
 app.use(express.static(path.join(__dirname, '../public')));  // Serve static files
 
-// Mount user routes under /api prefix
-app.use('/api', usersRouter);
+// Mount cost routes under /api prefix
+app.use('/api', costsRouter);
 
 // Handle 404 errors - route not found
 app.use(function(req, res, next) {

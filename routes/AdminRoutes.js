@@ -6,8 +6,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { createLogByType } = require('../Services/loggerServices');
-const logLevel = require('../Services/logLevel');
+const { createLogByType } = require('../Services/LoggerServices');
+const logLevel = require('../Services/LogLevel');
 
 /*
    GET /about

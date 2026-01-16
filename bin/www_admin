@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-const app = require('../servers/appAdmin');
+const app = require('../servers/AppAdmin');
 const debug = require('debug')('costmngr:admin-service');
 const http = require('http');
 

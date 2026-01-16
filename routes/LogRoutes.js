@@ -6,9 +6,9 @@
 
 const express = require('express');
 const router = express.Router();
-const { createLogByType } = require('../Services/loggerServices');
-const logLevel = require('../Services/logLevel');
-const { getAllLogs } = require('../Services/documentService');
+const { createLogByType } = require('../Services/LoggerServices');
+const logLevel = require('../Services/LogLevel');
+const { getAllLogs } = require('../Services/DocumentService');
 
 /*
    GET /logs
