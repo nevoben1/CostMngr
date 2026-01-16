@@ -9,6 +9,7 @@ const router = express.Router();
 const { createLogByType, createInfoLog } = require('../Services/loggerServices');
 const logLevel = require('../Services/logLevel');
 const { createUser, getAllUsers, getUserById } = require('../Services/documentService');
+const { ErrorIds, sendErrorResponse } = require('../utils/errorResponse');
 
 /*
    GET /users
@@ -39,7 +40,14 @@ router.get('/users', async function(req, res, next) {
 router.get('/users/:userId', async function(req, res, next) {
     try {
         createLogByType('GET /users with userId ' + req.params.userId + ' called', logLevel.INFO, true);
-        const userId = req.params.userId;
+        const userId = parseInt(req.params.userId);
+
+        // Validate that userId is a positive number
+        if (isNaN(userId) || userId <= 0) {
+            createLogByType('Invalid userId: must be a positive number', logLevel.ERROR, true);
+            return sendErrorResponse(res, 400, ErrorIds.INVALID_USERID, 'User ID must be a positive number');
+        }
+
         // Query user by ID
         const user = await getUserById(userId);
         res.send(user);
@@ -66,6 +74,13 @@ router.post('/add', async function(req, res, next) {
     try {
         createLogByType('POST /adduser called', logLevel.INFO, true);
         createLogByType('Received data: ' + JSON.stringify(req.body), logLevel.INFO);
+
+        // Validate that user id is a positive number
+        const userId = parseInt(req.body.id);
+        if (isNaN(userId) || userId <= 0) {
+            createLogByType('Invalid user id: must be a positive number', logLevel.ERROR, true);
+            return sendErrorResponse(res, 400, ErrorIds.INVALID_USERID, 'User ID must be a positive number');
+        }
 
         // Create new user with provided data
         const user = await createUser(req.body);

@@ -39,9 +39,16 @@ router.get('/report', async function(req, res, next) {
         const parsedUrl = url.parse(req.url, true);
 
         // Parse user ID, year, and month from query string
-        const userId = parsedUrl.query.id;
+        const userId = parseInt(parsedUrl.query.id);
         const year = parsedUrl.query.year;
         const month = parsedUrl.query.month;
+
+        // Validate that userId is a positive number
+        if (isNaN(userId) || userId <= 0) {
+            createLogByType('Invalid userId: must be a positive number', logLevel.ERROR, true);
+            return sendErrorResponse(res, 400, ErrorIds.INVALID_USERID, 'User ID must be a positive number');
+        }
+
         const monthAsInt = parseInt(month);
         // Validate month is in valid range (1-12)
         if(monthAsInt < 1 || monthAsInt > 12){
@@ -141,10 +148,16 @@ router.post('/add', async function(req, res, next) {
         createLogByType('Received data: ' + JSON.stringify(req.body), logLevel.INFO);
 
         // Verify that the user exists before creating the cost
-        const userId = req.body.userid;
-        if (!userId) {
+        const userId = parseInt(req.body.userid);
+        if (!req.body.userid) {
             createLogByType('Missing userid in request body', logLevel.ERROR, true);
             return sendErrorResponse(res, 400, ErrorIds.MISSING_USERID, 'userid is required in request body');
+        }
+
+        // Validate that userId is a positive number
+        if (isNaN(userId) || userId <= 0) {
+            createLogByType('Invalid userid: must be a positive number', logLevel.ERROR, true);
+            return sendErrorResponse(res, 400, ErrorIds.INVALID_USERID, 'User ID must be a positive number');
         }
 
         try {
