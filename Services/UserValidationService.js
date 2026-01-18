@@ -9,7 +9,7 @@ const { createLogByType } = require('./LoggerServices');
 const logLevel = require('./LogLevel');
 
 // External user service base URL
-const USER_SERVICE_BASE_URL = 'costmngr-users.onrender.com';
+const USER_SERVICE_BASE_URL = 'costmngr-users-ha0g.onrender.com';
 
 /*
    Verifies if a user exists by calling the external user service
