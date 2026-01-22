@@ -27,18 +27,21 @@ describe('API Routes', () => {
     });
 
     describe('GET /api/about', () => {
-        it('should return team members', async () => {
+        it('should return team members with first_name and last_name', async () => {
             // Mock environment variable for team members
-            process.env.TEAM_MEMBERS = 'Member1, Member2';
-            
+            process.env.TEAM_MEMBERS = 'John Doe, Jane Smith';
+
             // Make a GET request to the /api/about endpoint
             const res = await request(app).get('/api/about');
 
             // Verify the status code is 200 (OK)
             expect(res.statusCode).toEqual(200);
 
-            // Verify the response body matches the mocked team members
-            expect(res.body).toEqual(['Member1', 'Member2']);
+            // Verify the response body matches the expected JSON format
+            expect(res.body).toEqual([
+                { first_name: 'John', last_name: 'Doe' },
+                { first_name: 'Jane', last_name: 'Smith' }
+            ]);
         });
     });
 
