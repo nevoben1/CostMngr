@@ -122,7 +122,7 @@ async function getAllLogs(){
   */
 async function findCostReport(userId, year, month) {
     return await CostReport.findOne({
-        userId: parseInt(userId),
+        userid: parseInt(userId),
         year: parseInt(year),
         month: parseInt(month)
     });
@@ -141,12 +141,12 @@ async function findCostReport(userId, year, month) {
 async function upsertCostReport(userId, year, month, costs) {
     return await CostReport.findOneAndUpdate(
         {
-            userId: parseInt(userId),
+            userid: parseInt(userId),
             year: parseInt(year),
             month: parseInt(month)
         },
         {
-            userId: parseInt(userId),
+            userid: parseInt(userId),
             year: parseInt(year),
             month: parseInt(month),
             costs: costs

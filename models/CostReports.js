@@ -27,7 +27,7 @@ const Schema = mongoose.Schema;
    }
   */
 const CostReportSchema = new Schema({
-    userId: {
+    userid: {
         type: Number,
         required: true  // User identifier, part of compound key
     },
@@ -60,7 +60,7 @@ const CostReportSchema = new Schema({
    Creates a unique compound key on userId, year, and month
    This ensures only one report exists per user per month
   */
-CostReportSchema.index({ userId: 1, year: 1, month: 1 }, { unique: true });
+CostReportSchema.index({ userid: 1, year: 1, month: 1 }, { unique: true });
 
 // Create and export Mongoose model for 'costreports' collection
 const CostReport = mongoose.model('costreports', CostReportSchema);

@@ -88,18 +88,22 @@ router.get('/report', async function(req, res, next) {
             const costs = await getMonthlyReport(userId, year, month);
             // Group costs by category for organized reporting
             const categoriesToCosts = new Map();
+            
+            // Initialize all supported categories with empty arrays
+            const categories = process.env.SUPPORTED_CATEGORIES.split(',').map(cat => cat.trim());
+            for(const category of categories){
+                categoriesToCosts.set(category, []);
+            }
+            
             for(const cost of costs){
                 createLogByType(cost, logLevel.INFO);
                 const category = cost.category;
                 const day = new Date(cost.date).getDate();
                 // Create cost item with sum, description, and day
                 const objToAdd = {sum: cost.sum, description: cost.description, day: day};
-                // Add to existing category or create new category entry
+                // Add to existing category array
                 if(categoriesToCosts.has(category)){
                     categoriesToCosts.get(category).push(objToAdd);
-                }
-                else{
-                    categoriesToCosts.set(category, [objToAdd]);
                 }
             }
             // Convert Map to array of objects for JSON response
@@ -112,7 +116,7 @@ router.get('/report', async function(req, res, next) {
             }
         }
         // Build response object with parsed integers
-        const retVal = {userId: parseInt(userId), year: parseInt(year), month: parseInt(month), costs: costsArray};
+        const retVal = {userid: parseInt(userId), year: parseInt(year), month: parseInt(month), costs: costsArray};
         res.send(retVal);
         createLogByType('created a report for userId: ' + userId + ' year: ' + year + ' month: ' + month, logLevel.INFO, true);
     }
